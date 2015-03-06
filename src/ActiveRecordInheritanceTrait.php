@@ -269,8 +269,7 @@ trait ActiveRecordInheritanceTrait {
     }
 
     /**
-     * Returns the parent class name.
-     * Fully qualified name should be provided.
+     * Returns the fully qualified parent class name.
      * 
      * @return string
      */
