@@ -10,7 +10,7 @@ Include the package as dependency under the bower.json file.
 To install, either run
 
 ```bash
-$ php composer.phar require jlorente/yii2-activerecord-inheritance-trait "*"
+$ php composer.phar require jlorente/yii2-activerecord-inheritance "*"
 ```
 
 or add
@@ -19,7 +19,7 @@ or add
 ...
     "require": {
         ...
-        "jlorente/yii2-activerecord-inheritance-trait": "*"
+        "jlorente/yii2-activerecord-inheritance": "*"
     }
 ```
 
