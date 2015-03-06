@@ -1,0 +1,22 @@
+{
+    "name": "jlorente/yii2-activerecord-inheritance",
+    "description": "ActiveRecord Inheritance is an util to provide the Class Table Inheritance Pattern the to the Yii2 framework. It fakes inheritance between two ActiveRecord classes.",
+    "keywords": ["yii2", "inheritance", "activerecord", "class table inheritance", "table"],
+    "homepage": "https://github.com/jlorente/yii2-activerecord-inheritance",
+    "type": "yii2-extension",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jose Lorente Martin",
+            "email": "jose.lorente.martin@gmail.com"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "jlorente\\db\\": "src/"
+        }
+    }
+}
