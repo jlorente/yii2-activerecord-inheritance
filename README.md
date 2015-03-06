@@ -54,7 +54,8 @@ CREATE TABLE `admin` (
 To fake the inheritance between the two tables your code must look like this.
 
 ```php
-use jlorente\db\ActiveRecordInheritanceTrait;
+use jlorente\db\ActiveRecordInheritanceTrait,
+    jlorente\db\ActiveRecordInheritanceInterface;
 use yii\db\ActiveRecord;
 
 class User extends ActiveRecord {
@@ -68,7 +69,7 @@ class User extends ActiveRecord {
     }
 }
 
-class Admin extends ActiveRecord {
+class Admin extends ActiveRecord implements ActiveRecordInheritanceInterface {
     use ActiveRecordInheritanceTrait;
 
     public function tableName() {
