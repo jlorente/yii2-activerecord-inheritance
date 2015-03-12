@@ -10,10 +10,10 @@
 namespace jlorente\db;
 
 /**
- * The interface could be used in classes that use the ActiveRecordInheritanceTrait
- * for polymorphism considerations.
+ * The interface MUST be used in classes that use the 
+ * ActiveRecordInheritanceTrait for polymorphism considerations.
  * 
- * @author      José Lorente <jose.lorente.martin@gmail.com>
+ * @author José Lorente <jose.lorente.martin@gmail.com>
  */
 interface ActiveRecordInheritanceInterface {
     

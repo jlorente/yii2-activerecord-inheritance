@@ -12,11 +12,15 @@ namespace jlorente\db;
 use yii\base\UnknownPropertyException;
 use yii\base\UnknownMethodException;
 use yii\db\Exception;
+use yii\base\Exception as BaseException;
 use Yii;
 
 /**
  * Trait to simulate inheritance between two ActiveRecordInterface classes.
- * Child classes must use the trait and implement the extendsFrom method.
+ * Child classes MUST use the trait and MUST implement the 
+ * ActiveRecordInheritanceInterface.
+ * 
+ * @see ActiveRecordInheritanceInterface
  * 
  * * Methods overwriten from ActiveRecord in this trait like save, validate, etc... 
  * should not be overwriten on the class that uses the trait or functionality 
@@ -78,6 +82,9 @@ trait ActiveRecordInheritanceTrait {
      */
     private function _parent() {
         if ($this->_parent === null) {
+            if (($this instanceof ActiveRecordInheritanceInterface) === false) {
+                throw new BaseException('Classes that use the \jlorente\db\ActiveRecordInheritanceTrait must implement \jlorente\db\ActiveRecordInheritanceInterface');
+            }
             $pClass = static::extendsFrom();
             if ($this->id !== null) {
                 $this->_parent = $pClass::findOne($this->{$this->parentAttribute()});
@@ -267,11 +274,4 @@ trait ActiveRecordInheritanceTrait {
         $pClass = static::extendsFrom();
         return $pClass::primaryKey()[0];
     }
-
-    /**
-     * Returns the fully qualified parent class name.
-     * 
-     * @return string
-     */
-    abstract public static function extendsFrom();
 }
