@@ -194,7 +194,8 @@ trait ActiveRecordInheritanceTrait {
 
     /**
      * Saves the parent model and the current model.
-     * DO NOT OVERRIDE THIS METHOD or functionality of this trait will be lost.
+     * DO NOT OVERRIDE THIS METHOD ON TRAIT USER CLASS  or functionality of this 
+     * trait will be lost.
      * 
      * @return boolean
      * @throws Exception
@@ -225,7 +226,8 @@ trait ActiveRecordInheritanceTrait {
 
     /**
      * Validates the parent and the current model.
-     * DO NOT OVERRIDE THIS METHOD or functionality of this trait will be lost.
+     * DO NOT OVERRIDE THIS METHOD ON TRAIT USER CLASS  or functionality of this 
+     * trait will be lost.
      * 
      * @return boolean
      * @throws Exception
@@ -235,6 +237,89 @@ trait ActiveRecordInheritanceTrait {
                                 array_diff($this->attributes(), [$this->parentAttribute()]) :
                                 $attributeNames, $clearErrors);
         return $this->_parent()->validate($attributeNames, $clearErrors) && $r;
+    }
+
+    /**
+     * Returns a value indicating whether there is any validation error.
+     * DO NOT OVERRIDE THIS METHOD ON TRAIT USER CLASS  or functionality of this 
+     * trait will be lost.
+     * 
+     * @param string|null $attribute attribute name. Use null to check all attributes.
+     * @return boolean whether there is any error.
+     */
+    public function hasErrors($attribute = null) {
+        return $this->_parent()->hasErrors($attribute) || parent::hasErrors($attribute);
+    }
+
+    /**
+     * Returns the errors for all attribute or a single attribute.
+     * DO NOT OVERRIDE THIS METHOD ON TRAIT USER CLASS  or functionality of this 
+     * trait will be lost.
+     * 
+     * @param string $attribute attribute name. Use null to retrieve errors for all attributes.
+     * @property array An array of errors for all attributes. Empty array is returned if no error.
+     * The result is a two-dimensional array. See [[getErrors()]] for detailed description.
+     * @return array errors for all attributes or the specified attribute. Empty array is returned if no error.
+     * Note that when returning errors for all attributes, the result is a two-dimensional array, like the following:
+     *
+     * ~~~
+     * [
+     *     'username' => [
+     *         'Username is required.',
+     *         'Username must contain only word characters.',
+     *     ],
+     *     'email' => [
+     *         'Email address is invalid.',
+     *     ]
+     * ]
+     * ~~~
+     *
+     * @see getFirstErrors()
+     * @see getFirstError()
+     */
+    public function getErrors($attribute = null) {
+        return array_merge($this->_parent()->getErrors($attribute), parent::getErrors($attribute));
+    }
+
+    /**
+     * Returns the first error of every attribute in the model.
+     * DO NOT OVERRIDE THIS METHOD ON TRAIT USER CLASS  or functionality of this 
+     * trait will be lost.
+     * 
+     * @return array the first errors. The array keys are the attribute names, and the array
+     * values are the corresponding error messages. An empty array will be returned if there is no error.
+     * @see getErrors()
+     * @see getFirstError()
+     */
+    public function getFirstErrors() {
+        $errs = $this->getErrors();
+        if (empty($errs)) {
+            return [];
+        } else {
+            $errors = [];
+            foreach ($errs as $name => $es) {
+                if (!empty($es)) {
+                    $errors[$name] = reset($es);
+                }
+            }
+
+            return $errors;
+        }
+    }
+
+    /**
+     * Returns the first error of the specified attribute.
+     * DO NOT OVERRIDE THIS METHOD ON TRAIT USER CLASS  or functionality of this 
+     * trait will be lost.
+     * 
+     * @param string $attribute attribute name.
+     * @return string the error message. Null is returned if no error.
+     * @see getErrors()
+     * @see getFirstErrors()
+     */
+    public function getFirstError($attribute) {
+        $errors = $this->getErrors($attribute);
+        return empty($errors[$attribute]) ? null : $errors[0];
     }
 
     /**
@@ -274,4 +359,5 @@ trait ActiveRecordInheritanceTrait {
         $pClass = static::extendsFrom();
         return $pClass::primaryKey()[0];
     }
+
 }
