@@ -86,13 +86,22 @@ trait ActiveRecordInheritanceTrait {
                 throw new BaseException('Classes that use the \jlorente\db\ActiveRecordInheritanceTrait must implement \jlorente\db\ActiveRecordInheritanceInterface');
             }
             $pClass = static::extendsFrom();
-            if ($this->id !== null) {
-                $this->_parent = $pClass::findOne($this->{$this->parentAttribute()});
+            if ($this->getIsNewRecord() === false) {
+                $this->_parent = $this->parent;
             } else {
                 $this->_parent = new $pClass();
             }
         }
         return $this->_parent;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public static function populateRecord($record, $row) {
+        parent::populateRecord($record, $row);
+
+        $record->_parent = $record->parent;
     }
 
     /**
