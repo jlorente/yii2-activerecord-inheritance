@@ -11,9 +11,10 @@ namespace jlorente\db;
 
 use yii\base\UnknownPropertyException;
 use yii\base\UnknownMethodException;
-use yii\db\Exception;
+use yii\db\Exception as DbException;
 use yii\base\Exception as BaseException;
 use Yii;
+use Exception;
 
 /**
  * Trait to simulate inheritance between two ActiveRecordInterface classes.
@@ -207,7 +208,7 @@ trait ActiveRecordInheritanceTrait {
      * trait will be lost.
      * 
      * @return boolean
-     * @throws Exception
+     * @throws \Exception
      */
     public function save($runValidation = true, $attributeNames = null) {
         if ($runValidation === true && $this->validate($attributeNames) === false) {
@@ -218,15 +219,52 @@ trait ActiveRecordInheritanceTrait {
         $trans = static::getDb()->beginTransaction();
         try {
             if ($this->_parent()->save(false, $attributeNames) === false) {
-                throw new Exception('Unable to save parent model');
+                throw new DbException('Unable to save parent model');
             }
 
             $this->{$this->parentAttribute()} = $this->_parent()->{$this->parentPrimaryKey()};
             if (parent::save(false, $attributeNames) === false) {
-                throw new Exception('Unable to save current model');
+                throw new DbException('Unable to save current model');
             }
             $trans->commit();
             return true;
+        } catch (Exception $e) {
+            $trans->rollback();
+            throw $e;
+        }
+    }
+
+    /**
+     * Deletes the table row corresponding to this active record.
+     *
+     * This method performs the following steps in order:
+     *
+     * 1. call [[beforeDelete()]]. If the method returns false, it will skip the
+     *    rest of the steps;
+     * 2. delete the record from the database;
+     * 3. call [[afterDelete()]].
+     *
+     * In the above step 1 and 3, events named [[EVENT_BEFORE_DELETE]] and [[EVENT_AFTER_DELETE]]
+     * will be raised by the corresponding methods.
+     *
+     * @return integer|false the number of rows deleted, or false if the deletion is unsuccessful for some reason.
+     * Note that it is possible the number of rows deleted is 0, even though the deletion execution is successful.
+     * @throws StaleObjectException if [[optimisticLock|optimistic locking]] is enabled and the data
+     * being deleted is outdated.
+     * @throws \Exception in case delete failed.
+     */
+    public function delete() {
+        $trans = static::getDb()->beginTransaction();
+        try {
+            if (parent::delete() === false) {
+                throw new DbException('Unable to delete current model');
+            }
+            $result = $this->_parent()->delete();
+            if ($result === false) {
+                throw new DbException('Unable to delete parent model');
+            }
+            $trans->commit();
+            return $result;
         } catch (Exception $e) {
             $trans->rollback();
             throw $e;
