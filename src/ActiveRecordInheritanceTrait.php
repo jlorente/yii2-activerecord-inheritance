@@ -15,6 +15,7 @@ use yii\db\Exception as DbException;
 use yii\base\Exception as BaseException;
 use Yii;
 use Exception;
+use yii\db\ActiveRecord;
 
 /**
  * Trait to simulate inheritance between two ActiveRecordInterface classes.
@@ -199,7 +200,10 @@ trait ActiveRecordInheritanceTrait {
      * @return array attribute values (name => value).
      */
     public function getAttributes($names = null, $except = array()) {
-        return array_merge($this->_parent()->getAttributes($names, $except), parent::getAttributes($names, $except));
+        if ($names === null) {
+            $names = array_merge($this->_parent()->attributes(), $this->attributes());
+        }
+        return parent::getAttributes($names, $except);
     }
 
     /**
@@ -366,7 +370,7 @@ trait ActiveRecordInheritanceTrait {
      */
     public function getFirstError($attribute) {
         $errors = $this->getErrors($attribute);
-        return empty($errors[$attribute]) ? null : $errors[0];
+        return count($errors) ? $errors[0] : null;
     }
 
     /**
