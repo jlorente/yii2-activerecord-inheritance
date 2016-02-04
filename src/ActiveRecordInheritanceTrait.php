@@ -386,7 +386,7 @@ trait ActiveRecordInheritanceTrait {
      * 
      * @return \yii\db\ActiveQueryInterface
      */
-    public function getParent() {
+    public function getInheritedParent() {
         $class = static::extendsFrom();
         return $this->hasOne($class::className(), [$this->parentPrimaryKey() => $this->parentAttribute()]);
     }
