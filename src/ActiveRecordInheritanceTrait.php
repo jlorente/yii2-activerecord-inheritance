@@ -100,15 +100,6 @@ trait ActiveRecordInheritanceTrait {
     /**
      * @inheritdoc
      */
-    public static function populateRecord($record, $row) {
-        parent::populateRecord($record, $row);
-
-        $record->_parent = $record->parent;
-    }
-
-    /**
-     * @inheritdoc
-     */
     public function __get($name) {
         try {
             return parent::__get($name);
