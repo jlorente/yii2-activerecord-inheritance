@@ -373,6 +373,20 @@ trait ActiveRecordInheritanceTrait {
     }
 
     /**
+     * @inheritdoc
+     */
+    public function fields() {
+        return array_merge($this->_parent()->fields(), parent::fields());
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function extraFields() {
+        return array_merge($this->_parent()->extraFields(), parent::extraFields());
+    }
+
+    /**
      * Returns the relation with the parent class.
      * 
      * @return \yii\db\ActiveQueryInterface
