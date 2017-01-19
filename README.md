@@ -107,10 +107,10 @@ $admin->parent->doSomething()   //User does something
 This trait is very useful for faking inheritance, however query filters should be applied on the parent relation.
 ```php
 $admin = Admin::find()
-    ->joinWith('parent', function($query) {
+    ->joinWith(['parent' => function($query) {
         $query->andWhere(['username' => 'al-acran']);
         $query->andWhere(['name' => 'Al']);
-    })
+    }])
     ->andWhere(['level' => 1])
     ->one();
 ```
