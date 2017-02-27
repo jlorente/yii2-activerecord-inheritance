@@ -69,6 +69,8 @@ use yii\db\ActiveRecord;
  * 
  * This trait doesn't work with multiple primary and foreign keys.
  * 
+ * @property yii\web\ActiveRecord $parent The parent object
+ * 
  * @author José Lorente <jose.lorente.martin@gmail.com>
  */
 trait ActiveRecordInheritanceTrait {
@@ -82,19 +84,37 @@ trait ActiveRecordInheritanceTrait {
     /**
      * @return \yii\db\ActiveRecordInterface
      */
-    private function _parent() {
+    public function getParent() {
         if ($this->_parent === null) {
             if (($this instanceof ActiveRecordInheritanceInterface) === false) {
                 throw new BaseException('Classes that use the \jlorente\db\ActiveRecordInheritanceTrait must implement \jlorente\db\ActiveRecordInheritanceInterface');
             }
             $pClass = static::extendsFrom();
             if ($this->getIsNewRecord() === false) {
-                $this->_parent = $this->parent;
+                $this->_parent = $this->_parent()->one();
             } else {
                 $this->_parent = new $pClass();
             }
         }
         return $this->_parent;
+    }
+
+    /**
+     * Returns the relation with the parent class.
+     * 
+     * @return \yii\db\ActiveQueryInterface
+     */
+    private function _parent() {
+        $class = static::extendsFrom();
+        return $this->hasOne($class::className(), [$this->parentPrimaryKey() => $this->parentAttribute()]);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public static function populateRecord($record, $row) {
+        parent::populateRecord($record, $row);
+        $record->_parent = $record->_parent()->one();
     }
 
     /**
@@ -104,7 +124,7 @@ trait ActiveRecordInheritanceTrait {
         try {
             return parent::__get($name);
         } catch (UnknownPropertyException $e) {
-            return $this->_parent()->{$name};
+            return $this->parent->{$name};
         }
     }
 
@@ -118,7 +138,7 @@ trait ActiveRecordInheritanceTrait {
             if (method_exists($this, 'get' . $name)) {
                 throw $e;
             } else {
-                $this->_parent()->{$name} = $value;
+                $this->getParent()->{$name} = $value;
             }
         }
     }
@@ -127,7 +147,7 @@ trait ActiveRecordInheritanceTrait {
      * @inheritdoc
      */
     public function setAttributes($values, $safeOnly = true) {
-        $this->_parent()->setAttributes($values, $safeOnly);
+        $this->getParent()->setAttributes($values, $safeOnly);
         parent::setAttributes($values, $safeOnly);
     }
 
@@ -140,11 +160,11 @@ trait ActiveRecordInheritanceTrait {
                 return true;
             }
         } catch (UnknownPropertyException $e) {
-            return $this->_parent()->{$name};
+            return $this->getParent()->{$name};
         }
 
         if (parent::__isset($name) === false) {
-            return isset($this->_parent()->{$name});
+            return isset($this->getParent()->{$name});
         } else {
             return true;
         }
@@ -159,7 +179,7 @@ trait ActiveRecordInheritanceTrait {
                 parent::__unset($name);
             }
         } catch (UnknownPropertyException $e) {
-            unset($this->_parent()->{$name});
+            unset($this->getParent()->{$name});
         }
     }
 
@@ -170,15 +190,27 @@ trait ActiveRecordInheritanceTrait {
         try {
             return parent::__call($name, $params);
         } catch (UnknownMethodException $e) {
-            return call_user_func_array([$this->_parent(), $name], $params);
+            return call_user_func_array([$this->getParent(), $name], $params);
         }
     }
 
     /**
      * @inheritdoc
+     * 
+     * If you override this method in the class that uses the Trait, remember 
+     * to merge the contents of the faked parent and the real parent with yours.
+     * 
+     * ```php
+     * public function attributeLabels() {
+     *     return array_merge($this->getParent()->attributeLabels(), parent::attributeLabels(), [
+     *         //Your custom labels
+     *     ]);
+     * }
+     * 
+     * ```
      */
     public function attributeLabels() {
-        return array_merge($this->_parent()->attributeLabels(), parent::attributeLabels());
+        return array_merge($this->getParent()->attributeLabels(), parent::attributeLabels());
     }
 
     /**
@@ -192,7 +224,7 @@ trait ActiveRecordInheritanceTrait {
      */
     public function getAttributes($names = null, $except = array()) {
         if ($names === null) {
-            $names = array_merge($this->_parent()->attributes(), $this->attributes());
+            $names = array_merge($this->getParent()->attributes(), $this->attributes());
         }
         return parent::getAttributes($names, $except);
     }
@@ -213,11 +245,11 @@ trait ActiveRecordInheritanceTrait {
 
         $trans = static::getDb()->beginTransaction();
         try {
-            if ($this->_parent()->save(false, $attributeNames) === false) {
+            if ($this->getParent()->save(false, $attributeNames) === false) {
                 throw new DbException('Unable to save parent model');
             }
 
-            $this->{$this->parentAttribute()} = $this->_parent()->{$this->parentPrimaryKey()};
+            $this->{$this->parentAttribute()} = $this->getParent()->{$this->parentPrimaryKey()};
             if (parent::save(false, $attributeNames) === false) {
                 throw new DbException('Unable to save current model');
             }
@@ -254,7 +286,7 @@ trait ActiveRecordInheritanceTrait {
             if (parent::delete() === false) {
                 throw new DbException('Unable to delete current model');
             }
-            $result = $this->_parent()->delete();
+            $result = $this->getParent()->delete();
             if ($result === false) {
                 throw new DbException('Unable to delete parent model');
             }
@@ -276,9 +308,9 @@ trait ActiveRecordInheritanceTrait {
      */
     public function validate($attributeNames = null, $clearErrors = true) {
         $r = parent::validate($attributeNames === null ?
-                                array_diff($this->attributes(), [$this->parentAttribute()]) :
+                                array_diff($this->activeAttributes(), $this->getParent()->activeAttributes(), [$this->parentAttribute()]) :
                                 $attributeNames, $clearErrors);
-        return $this->_parent()->validate($attributeNames, $clearErrors) && $r;
+        return $this->getParent()->validate($attributeNames, $clearErrors) && $r;
     }
 
     /**
@@ -290,7 +322,7 @@ trait ActiveRecordInheritanceTrait {
      * @return boolean whether there is any error.
      */
     public function hasErrors($attribute = null) {
-        return $this->_parent()->hasErrors($attribute) || parent::hasErrors($attribute);
+        return $this->getParent()->hasErrors($attribute) || parent::hasErrors($attribute);
     }
 
     /**
@@ -320,7 +352,7 @@ trait ActiveRecordInheritanceTrait {
      * @see getFirstError()
      */
     public function getErrors($attribute = null) {
-        return array_merge($this->_parent()->getErrors($attribute), parent::getErrors($attribute));
+        return array_merge($this->getParent()->getErrors($attribute), parent::getErrors($attribute));
     }
 
     /**
@@ -369,17 +401,7 @@ trait ActiveRecordInheritanceTrait {
      */
     public function refresh() {
         $r = parent::refresh();
-        return $this->_parent()->refresh() && $r;
-    }
-
-    /**
-     * Returns the relation with the parent class.
-     * 
-     * @return \yii\db\ActiveQueryInterface
-     */
-    public function getParent() {
-        $class = static::extendsFrom();
-        return $this->hasOne($class::className(), [$this->parentPrimaryKey() => $this->parentAttribute()]);
+        return $this->getParent()->refresh() && $r;
     }
 
     /**
