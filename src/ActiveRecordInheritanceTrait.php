@@ -84,14 +84,15 @@ trait ActiveRecordInheritanceTrait {
     /**
      * @return \yii\db\ActiveRecordInterface
      */
-    public function getParent() {
-        if ($this->_parent === null) {
+    public function getParent($recalculate = false) {
+        if ($this->_parent === null || $recalculate === true) {
             if (($this instanceof ActiveRecordInheritanceInterface) === false) {
                 throw new BaseException('Classes that use the \jlorente\db\ActiveRecordInheritanceTrait must implement \jlorente\db\ActiveRecordInheritanceInterface');
             }
             $pClass = static::extendsFrom();
-            if ($this->getIsNewRecord() === false) {
-                $this->_parent = $this->_parent()->one();
+            $parent = $this->_parent()->one();
+            if ($this->getIsNewRecord() === false || $parent !== null) {
+                $this->_parent = $parent;
             } else {
                 $this->_parent = new $pClass();
             }
