@@ -9,13 +9,13 @@
 
 namespace jlorente\db;
 
+use yii\helpers\ArrayHelper;
 use yii\base\UnknownPropertyException;
 use yii\base\UnknownMethodException;
 use yii\db\Exception as DbException;
 use yii\base\Exception as BaseException;
 use Yii;
 use Exception;
-use yii\db\ActiveRecord;
 
 /**
  * Trait to simulate inheritance between two ActiveRecordInterface classes.
@@ -423,6 +423,21 @@ trait ActiveRecordInheritanceTrait {
     public function parentPrimaryKey() {
         $pClass = static::extendsFrom();
         return $pClass::primaryKey()[0];
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function fields() {
+        return ArrayHelper::merge($this->parent->fields(), parent::fields());
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function loadDefaultValues($skipIfSet = true) {
+        $this->parent->loadDefaultValues($skipIfSet);
+        parent::loadDefaultValues($skipIfSet);
     }
 
 }
