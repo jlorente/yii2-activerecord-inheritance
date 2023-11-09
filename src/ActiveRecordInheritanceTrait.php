@@ -92,8 +92,7 @@ trait ActiveRecordInheritanceTrait
                 throw new BaseException('Classes that use the \jlorente\db\ActiveRecordInheritanceTrait must implement \jlorente\db\ActiveRecordInheritanceInterface');
             }
             $pClass = static::extendsFrom();
-            $parent = $this->_parent()->one();
-            if ($this->getIsNewRecord() === false || $parent !== null) {
+            if ($this->getParentAttributeValue() && $this->getIsNewRecord() === false && ($parent = $this->_parent()->one())) {
                 $this->_parent = $parent;
             } else {
                 $this->_parent = new $pClass();
@@ -464,4 +463,15 @@ trait ActiveRecordInheritanceTrait
         parent::loadDefaultValues($skipIfSet);
     }
 
+    /**
+     * Gets the parent attribute value.
+     *
+     * @return mixed|null
+     */
+    public function getParentAttributeValue()
+    {
+        $ownAttributes = $this->attributes();
+        $parentAttribute = $this->parentAttribute();
+        return isset($ownAttributes[$parentAttribute]) ? $ownAttributes[$parentAttribute] : null;
+    }
 }
